@@ -8,12 +8,10 @@ export const pick = (obj, ...fields) => {
   const resultPick = {};
   const objData = Object.entries(obj);
 
-  [...fields].forEach((field) => {
-    objData.forEach((objElement) => {
-      if (objElement[0] === field) {
-        resultPick[`${objElement[0]}`] = objElement[1];
-      }
-    });
+  objData.forEach((data, index) => {
+    if (fields.includes(data[0])) {
+      resultPick[`${data[0]}`] = data[1];
+    }
   });
 
   return resultPick;
