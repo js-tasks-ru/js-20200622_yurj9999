@@ -5,4 +5,13 @@
  */
 export function createGetter(path) {
 
+  return (obj) => {
+    if (Object.keys(obj).length) {
+      path.split('.').forEach((key) => {
+        obj = obj[key];
+      });
+      return obj;
+    }
+  };
+
 }
