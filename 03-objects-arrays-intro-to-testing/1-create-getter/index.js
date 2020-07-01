@@ -5,9 +5,11 @@
  */
 export function createGetter(path) {
 
+  const pathArr = path.split('.');
+
   return (obj) => {
     if (Object.keys(obj).length) {
-      path.split('.').forEach((key) => {
+      pathArr.forEach((key) => {
         obj = obj[key];
       });
       return obj;
