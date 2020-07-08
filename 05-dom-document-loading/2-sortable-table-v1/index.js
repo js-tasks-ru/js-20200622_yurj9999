@@ -108,10 +108,6 @@ export default class SortableTable {
       });
     }
 
-    const bodyElement = this.allDataElements.filter((element) => {
-      return element.dataset.element === 'body';
-    });
-
     this._searchElement('body').innerHTML = this._setProducts(sortData);
   }
 
