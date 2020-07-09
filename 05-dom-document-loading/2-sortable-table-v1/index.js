@@ -1,6 +1,6 @@
 export default class SortableTable {
   element = null;
-  allDataElements = [];
+  subElements = null;
 
   constructor(header = [], {
     data = []
@@ -12,52 +12,49 @@ export default class SortableTable {
     this.render();
   }
 
+  _setItemsProduct(items, product) {
+    return `
+      ${items.map((item) => {
+        const id = item.id;
+          return `
+            <div class="sortable-table__cell">${id === 'images' ? `<img class="sortable-table-image" alt="Image" src="${product[id][0]?.url}">` : `${product[id]}`}</div>
+          `;
+        }).join('')
+      }
+    `;
+  }
+
   _setProducts(data) {
     return `
       ${data.map((product) => {
         return `
-          <a href="/products/${product.id}" class="sortable-table__row">
-              <div class="sortable-table__cell">
-                  ${product.images[0].url ?
-                    `<img class="sortable-table-image" alt="Image" src="${product.images[0]?.url}">`
-                    : ''
-                  }
-              </div>
-              <div class="sortable-table__cell">${product.title}</div>
-              <div class="sortable-table__cell">
-                  <span data-tooltip="
-                      <div class=&quot;sortable-table-tooltip&quot;>
-                          <span class=&quot;sortable-table-tooltip__category&quot;>
-                              ${product.subcategory.title}
-                          </span>
-                          / <b class=&quot;sortable-table-tooltip__subcategory&quot;>
-                              ${product.subcategory.category.title}
-                          </b>
-                      </div>
-                  ">${product.quantity}</span>
-              </div>
-              <div class="sortable-table__cell">$${product.price}</div>
-              <div class="sortable-table__cell">${product.sales}</div>
-              <div class="sortable-table__cell">Enabled</div>
-          </a>
+            <a href="/products/${product.id}" class="sortable-table__row">
+                ${this._setItemsProduct(this.header, product)}
+            </a>
         `;
       }).join('')}
     `;
   }
 
   _sortIt(first, second, fieldName) {
-    return String(first[fieldName]).localeCompare(
-      String(second[fieldName]), [], {sensitivity: 'variant', caseFirst: 'upper', numeric: true});
+    const dataType = this.header.find(item => item.id === fieldName).sortType;
+    if (dataType === 'string') {
+      return first[fieldName].localeCompare(second[fieldName], ['ru'], {usage: 'sort', caseFirst : 'upper'});
+    } else if (dataType === 'number') {
+      return first[fieldName] - second[fieldName];
+    }
   };
 
-  _getSubElementsArray(mainElement) {
-    this.allDataElements = [...mainElement.querySelectorAll('[data-element]')];
+  _getSubElements(mainElement) {
+    const elements = mainElement.querySelectorAll('[data-element]');
+    this.subElements = [...elements].reduce((acc, subElement) => {
+      acc[subElement.dataset.element] = subElement;
+      return acc;
+    }, {});
   }
 
   _searchElement(elementName) {
-    return this.allDataElements.filter((element) => {
-      return element.dataset.element === elementName;
-    })[0];
+    return this.subElements[elementName];
   }
 
   render() {
@@ -91,7 +88,7 @@ export default class SortableTable {
 
     this.element = element.firstElementChild;
 
-    this._getSubElementsArray(this.element);
+    this._getSubElements(this.element);
   }
 
   sort(field = '', sorting = '') {
@@ -99,13 +96,9 @@ export default class SortableTable {
     const sortData = [...this.data];
 
     if (sorting === 'asc') {
-      sortData.sort((first, second) => {
-        return this._sortIt(first, second, field);
-      });
+      sortData.sort((first, second) => this._sortIt(first, second, field));
     } else if (sorting === 'desc') {
-      sortData.sort((first, second) => {
-        return this._sortIt(second, first, field);
-      });
+      sortData.sort((first, second) => this._sortIt(second, first, field));
     }
 
     this._searchElement('body').innerHTML = this._setProducts(sortData);

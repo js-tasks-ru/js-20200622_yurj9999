@@ -7,6 +7,10 @@ export default class NotificationMessage {
     type = ''
   } = {}) {
 
+    if (NotificationMessage.instance !== undefined) {
+      NotificationMessage.instance.remove();
+    }
+
     NotificationMessage.instance = this;
 
     this.message = message;
@@ -17,7 +21,6 @@ export default class NotificationMessage {
   }
 
   render() {
-
     const element = document.createElement('div');
 
     element.innerHTML = `
