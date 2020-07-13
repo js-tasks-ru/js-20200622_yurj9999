@@ -52,15 +52,10 @@ export default class DoubleSlider {
     }));
   };
 
-  constructor({
-                min = 100,
-                max = 200,
-                formatValue = value => '$' + value,
-                selected = {
-                  from: min,
-                  to: max
-                }
-              } = {}) {
+  constructor({min = 100, max = 200, formatValue = value => '$' + value, selected = {
+    from: min,
+    to: max
+  }} = {}) {
     this.min = min;
     this.max = max;
     this.formatValue = formatValue;
