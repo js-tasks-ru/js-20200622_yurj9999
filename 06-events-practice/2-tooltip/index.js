@@ -1,21 +1,21 @@
 class Tooltip {
   element = null;
 
-  _showTooltip = (event) => {
-    if (event.target.dataset.hasOwnProperty('tooltip')) {
+  showTooltip = (event) => {
+    if (event.target.dataset.tooltip) {
       this.render(event.target.dataset.tooltip);
       this.element.setAttribute('style', `top: ${event.clientY}px; left: ${event.clientX}px;`);
-      event.target.addEventListener('pointermove', this._updateTooltip);
+      event.target.addEventListener('pointermove', this.updateTooltip);
     }
   }
 
-  _updateTooltip = (event) => {
+  updateTooltip = (event) => {
     this.element.setAttribute('style', `top: ${event.clientY + 1}px; left: ${event.clientX + 1}px;`);
   }
 
-  _checkTooltipForRemove = (event) => {
-    if (event.target.dataset.hasOwnProperty('tooltip')) {
-      event.target.removeEventListener('pointermove', this._updateTooltip);
+  checkTooltipForRemove = (event) => {
+    if (event.target.dataset.tooltip) {
+      event.target.removeEventListener('pointermove', this.updateTooltip);
       this.element.remove();
       this.element = null;
     }
@@ -29,13 +29,13 @@ class Tooltip {
   }
 
   initialize() {
-    document.addEventListener('pointerover', this._showTooltip);
-    document.addEventListener('pointerout', this._checkTooltipForRemove);
+    document.addEventListener('pointerover', this.showTooltip);
+    document.addEventListener('pointerout', this.checkTooltipForRemove);
   }
 
   destroy() {
-    document.removeEventListener('pointerover', this._showTooltip);
-    document.removeEventListener('pointerout', this._checkTooltipForRemove);
+    document.removeEventListener('pointerover', this.showTooltip);
+    document.removeEventListener('pointerout', this.checkTooltipForRemove);
   }
 }
 
