@@ -61,6 +61,7 @@ export default class DoubleSlider {
       to: max
     }
   } = {}) {
+
     this.min = min;
     this.max = max;
     this.formatValue = formatValue;
