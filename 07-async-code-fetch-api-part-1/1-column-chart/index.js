@@ -1,18 +1,22 @@
 export default class ColumnChart {
-  element = null;
+  element = document.createElement('div');
 
-  chartHeight = 50; // ???
+  chartHeight = 50;
+  subElements = {};
+  data = [];
 
   constructor({
     url = '',
     range = {
-      from: new Date,
-      to: new Date
+      from: new Date(),
+      to: new Date()
     },
     label = '',
     formatHeading = data => `$${data}`,
     link = ''
   } = {}) {
+
+    this.element.setAttribute('style', `--chart-height: ${this.chartHeight}`);
 
     this.url = url;
     this.range = range;
@@ -20,28 +24,16 @@ export default class ColumnChart {
     this.formatHeading = formatHeading;
     this.link = link;
 
-    //this.render();
-
+    this.prepareData();
   }
 
-  /*constructor() {
-
-    url: 'api/dashboard/orders',
-      range: {
-      from: new Date('2020-04-06'),
-        to: new Date('2020-05-06'),
-    },
-    label: 'orders',
-      link: '#'
-
-
-    this.data = data;
-    this.label = label;
-    this.value = value;
-    this.link = link;
-
-    this.render();
-  }*/
+  getSubElements(mainElement) {
+    const elements = mainElement.querySelectorAll('[data-element]');
+    this.subElements = [...elements].reduce((acc, subElement) => {
+      acc[subElement.dataset.element] = subElement;
+      return acc;
+    }, {});
+  }
 
   setColumns(data) {
     const maxValue = Math.max(...data);
@@ -54,46 +46,48 @@ export default class ColumnChart {
     }).join('');
   }
 
-  render() {
-    const element = document.createElement('div');
-
-    /*if (this.data.length === 0) {
-      element.classList.add('column-chart_loading');
-      element.setAttribute('style', `--chart-height: ${this.chartHeight}`);
+  async prepareData() {
+    if (this.url) {
+      this.data = await this.getDataFromServer();
     }
-
-    element.innerHTML = `<div class="column-chart__title">
-        Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>
-    </div>
-    <div class="column-chart__container">
-        <div class="column-chart__header">${this.value}</div>
-        <div class="column-chart__chart">${this.setColumns(this.data)}</div>
-    </div>`;
-
-    this.element = element;*/
+    this.render();
   }
 
-  /*update({bodyData = []} = {}) {
-    const updatingElement = this.element.querySelector('.column-chart__chart');
-    updatingElement.innerHTML = this.setColumns(bodyData);
-  }*/
+  async render() {
+    /*const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
+    const value = this.data.reduce((acc, item) => acc + item, 0);
+    const formatValue = this.label === 'sales' ? this.formatHeading(value) : value;*/
 
+    if (!this.data.length) {
+      this.element.classList.add('column-chart_loading');
+    } else {
+      this.element.classList.remove('column-chart_loading');
+    }
 
-  // возвращает {[данные]} их в метод обновлени DOM
+    const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
+    const value = this.data.reduce((acc, item) => acc + item, 0);
+    const formatValue = this.label === 'sales' ? this.formatHeading(value) : value;
 
-  async update(fromDate = this.range.from, toDate = this.range.to) {
+    this.element.innerHTML = `<div class="column-chart__title">${title}</div>
+    <div class="column-chart__container">
+        <div data-element="header" class="column-chart__header">${formatValue}</div>
+        <div data-element="body" class="column-chart__chart">${this.setColumns(this.data)}</div>
+    </div>`;
 
-    // здесь вызывать метод запроса на сервер, как он отработает, 
+    this.getSubElements(this.element);
+  }
 
+  async getDataFromServer(fromDate = this.range.from, toDate = this.range.to) {
     const isoFrom = fromDate.toISOString();
     const isoTo = toDate.toISOString();
-
     const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
+    return Object.values(await response.json());
+  }
 
-
-    console.log(await response.json());
-
-
+  async update(fromDate, toDate) {
+    this.element.classList.add('column-chart_loading');
+    this.data = await this.getDataFromServer(fromDate, toDate);
+    this.render();
   }
 
   remove() {
