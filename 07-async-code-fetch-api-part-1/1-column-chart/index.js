@@ -61,8 +61,6 @@ export default class ColumnChart {
   async render() {
     if (!this.data.length) {
       this.element.classList.add('column-chart_loading');
-    } else {
-      this.element.classList.remove('column-chart_loading');
     }
 
     const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
@@ -86,10 +84,12 @@ export default class ColumnChart {
   async update(fromDate, toDate) {
     this.element.classList.add('column-chart_loading');
     this.data = await this.getDataFromServer(fromDate, toDate);
-    this.element.classList.remove('column-chart_loading');
 
-    this.subElements.header.innerHTML = this.setHeaderValue(this.data);
-    this.subElements.body.innerHTML = this.setColumns(this.data);
+    if (this.data.length) {
+      this.element.classList.remove('column-chart_loading');
+      this.subElements.header.innerHTML = this.setHeaderValue(this.data);
+      this.subElements.body.innerHTML = this.setColumns(this.data);
+    }
   }
 
   remove() {
