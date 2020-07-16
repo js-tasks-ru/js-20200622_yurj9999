@@ -46,6 +46,11 @@ export default class ColumnChart {
     }).join('');
   }
 
+  setHeaderValue(data) {
+    const value = data.reduce((acc, item) => acc + item, 0);
+    return this.label === 'sales' ? this.formatHeading(value) : value;
+  }
+
   async prepareData() {
     if (this.url) {
       this.data = await this.getDataFromServer();
@@ -54,10 +59,6 @@ export default class ColumnChart {
   }
 
   async render() {
-    /*const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
-    const value = this.data.reduce((acc, item) => acc + item, 0);
-    const formatValue = this.label === 'sales' ? this.formatHeading(value) : value;*/
-
     if (!this.data.length) {
       this.element.classList.add('column-chart_loading');
     } else {
@@ -65,12 +66,10 @@ export default class ColumnChart {
     }
 
     const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
-    const value = this.data.reduce((acc, item) => acc + item, 0);
-    const formatValue = this.label === 'sales' ? this.formatHeading(value) : value;
 
     this.element.innerHTML = `<div class="column-chart__title">${title}</div>
     <div class="column-chart__container">
-        <div data-element="header" class="column-chart__header">${formatValue}</div>
+        <div data-element="header" class="column-chart__header">${this.setHeaderValue(this.data)}</div>
         <div data-element="body" class="column-chart__chart">${this.setColumns(this.data)}</div>
     </div>`;
 
@@ -87,7 +86,10 @@ export default class ColumnChart {
   async update(fromDate, toDate) {
     this.element.classList.add('column-chart_loading');
     this.data = await this.getDataFromServer(fromDate, toDate);
-    this.render();
+    this.element.classList.remove('column-chart_loading');
+
+    this.subElements.header.innerHTML = this.setHeaderValue(this.data);
+    this.subElements.body.innerHTML = this.setColumns(this.data);
   }
 
   remove() {
