@@ -25,6 +25,7 @@ export default class ColumnChart {
     this.link = link;
 
     this.prepareData();
+    this.render();
   }
 
   getSubElements(mainElement) {
@@ -52,17 +53,20 @@ export default class ColumnChart {
   }
 
   async prepareData() {
-    if (this.url) {
-      this.data = await this.getDataFromServer();
+    try {
+      if (this.url) {
+        this.data = await this.getDataFromServer();
+      }
+      this.update();
+    } catch (error) {
+      console.log(error);
     }
-    this.render();
   }
 
-  async render() {
+  render() {
     if (!this.data.length) {
       this.element.classList.add('column-chart_loading');
     }
-
     const title = `Total ${this.label}<a href="${this.link}" class="column-chart__link">View all</a>`;
 
     this.element.innerHTML = `<div class="column-chart__title">${title}</div>
@@ -70,25 +74,32 @@ export default class ColumnChart {
         <div data-element="header" class="column-chart__header">${this.setHeaderValue(this.data)}</div>
         <div data-element="body" class="column-chart__chart">${this.setColumns(this.data)}</div>
     </div>`;
-
     this.getSubElements(this.element);
   }
 
   async getDataFromServer(fromDate = this.range.from, toDate = this.range.to) {
-    const isoFrom = fromDate.toISOString();
-    const isoTo = toDate.toISOString();
-    const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
-    return Object.values(await response.json());
+    try {
+      const isoFrom = fromDate.toISOString();
+      const isoTo = toDate.toISOString();
+      const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
+      return Object.values(await response.json());
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async update(fromDate, toDate) {
-    this.element.classList.add('column-chart_loading');
-    this.data = await this.getDataFromServer(fromDate, toDate);
+    try {
+      this.element.classList.add('column-chart_loading');
+      this.data = await this.getDataFromServer(fromDate, toDate);
 
-    if (this.data.length) {
-      this.element.classList.remove('column-chart_loading');
-      this.subElements.header.innerHTML = this.setHeaderValue(this.data);
-      this.subElements.body.innerHTML = this.setColumns(this.data);
+      if (this.data.length) {
+        this.element.classList.remove('column-chart_loading');
+        this.subElements.header.innerHTML = this.setHeaderValue(this.data);
+        this.subElements.body.innerHTML = this.setColumns(this.data);
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 
