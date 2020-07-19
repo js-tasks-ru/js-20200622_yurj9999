@@ -10,7 +10,7 @@ export default class SortableTable {
   isDataLoading = false;
   step = 0;
 
-  sorting = async (event) => {
+  sorting = (event) => {
     const target = event.target.closest('div');
     const isSortable = target.dataset.sortable;
 
@@ -29,25 +29,16 @@ export default class SortableTable {
         this.step = 0;
         this.data = [];
         this.serverIsEmpty = false;
-
-        try {
-          await this.sortOnServer(id, order);
-        } catch (e) {
-          return [];
-        }
+        this.sortOnServer(id, order);
       }
     }
   }
 
-  scrollingDataLoading = async () => {
+  scrollingDataLoading = () => {
     const clientHeight = document.documentElement.clientHeight;
     const bottom = Math.floor(document.documentElement.getBoundingClientRect().bottom);
     if (!this.isDataLoading && bottom <= clientHeight + 100) {
-      try {
-        await this.sortOnServer();
-      } catch (e) {
-        return [];
-      }
+      this.sortOnServer();
     }
   }
 
@@ -95,7 +86,7 @@ export default class SortableTable {
         this.subElements.body.innerHTML = this.body(this.data);
         this.step = this.step + elementCount;
       } catch (e) {
-        return [];
+        this.onErrorHandler();
       }
     }
   }
@@ -165,7 +156,7 @@ export default class SortableTable {
       try {
         await this.sortOnServer();
       } catch (e) {
-        return [];
+        this.onErrorHandler();
       }
     }
 
@@ -184,16 +175,16 @@ export default class SortableTable {
       }
     }
 
-    if (order === 'asc') {
-      sortData.sort((first, second) => sortIt(first, second, id));
-    } else if (order === 'desc') {
-      sortData.sort((first, second) => sortIt(second, first, id));
-    }
+    sortData.sort((first, second) => order === 'asc' ? sortIt(first, second, id) : sortIt(second, first, id));
 
     this.sortingOptions.id = id;
     this.sortingOptions.order = order;
 
     this.subElements.body.innerHTML = this.body(sortData);
+  }
+
+  onErrorHandler() {
+    // метод обработки ошибок
   }
 
   remove() {
