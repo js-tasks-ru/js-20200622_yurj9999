@@ -35,7 +35,6 @@ export default class SortableTable {
         } catch (e) {
           return [];
         }
-        //await this.sortOnServer(id, order);
       }
     }
   }
@@ -44,13 +43,11 @@ export default class SortableTable {
     const clientHeight = document.documentElement.clientHeight;
     const bottom = Math.floor(document.documentElement.getBoundingClientRect().bottom);
     if (!this.isDataLoading && bottom <= clientHeight + 100) {
-
       try {
         await this.sortOnServer();
       } catch (e) {
         return [];
       }
-      //await this.sortOnServer();
     }
   }
 
