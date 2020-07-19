@@ -65,15 +65,6 @@ export default class SortableTable {
     this.sortingOptions = sorted;
 
     this.render();
-
-    if (this.data.length) {
-      this.hasLocalData = true;
-      this.sortOnClient('title', 'asc');
-    } else {
-      this.sortOnServer();
-    }
-
-    this.addListeners();
   }
 
   async sortOnServer(id = this.sortingOptions.id, order = this.sortingOptions.order) {
@@ -150,7 +141,7 @@ export default class SortableTable {
     }).join('');
   }
 
-  render() {
+  async render() {
     this.element.innerHTML = `<div data-element="productsContainer" class="products-list__container">
         <div data-element="main" class="sortable-table">
             <div data-element="header" class="sortable-table__header sortable-table__row">${this.head(this.header)}</div>
@@ -166,6 +157,19 @@ export default class SortableTable {
     </div>`;
 
     this.getSubElements(this.element);
+
+    if (this.data.length) {
+      this.hasLocalData = true;
+      this.sortOnClient('title', 'asc');
+    } else {
+      try {
+        await this.sortOnServer();
+      } catch (e) {
+        return [];
+      }
+    }
+
+    this.addListeners();
   }
 
   sortOnClient(id = '', order = '') {
