@@ -69,18 +69,27 @@ export default class ColumnChart {
   async getDataFromServer(fromDate, toDate) {
     const isoFrom = fromDate.toISOString();
     const isoTo = toDate.toISOString();
-    const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
-    return Object.values(await response.json());
+
+    try {
+      const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
+      return Object.values(await response.json());
+    } catch (e) {
+      return [];
+    }
   }
 
   async update(fromDate = this.range.from, toDate = this.range.to) {
     this.element.classList.add('column-chart_loading');
-    this.data = await this.getDataFromServer(fromDate, toDate);
 
-    if (this.data.length) {
-      this.element.classList.remove('column-chart_loading');
-      this.subElements.header.innerHTML = this.setHeaderValue(this.data);
-      this.subElements.body.innerHTML = this.setColumns(this.data);
+    try {
+      this.data = await this.getDataFromServer(fromDate, toDate);
+      if (this.data.length) {
+        this.element.classList.remove('column-chart_loading');
+        this.subElements.header.innerHTML = this.setHeaderValue(this.data);
+        this.subElements.body.innerHTML = this.setColumns(this.data);
+      }
+    } catch (e) {
+      return [];
     }
   }
 

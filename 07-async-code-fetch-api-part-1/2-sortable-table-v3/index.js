@@ -29,7 +29,13 @@ export default class SortableTable {
         this.step = 0;
         this.data = [];
         this.serverIsEmpty = false;
-        await this.sortOnServer(id, order);
+
+        try {
+          await this.sortOnServer(id, order);
+        } catch (e) {
+          return [];
+        }
+        //await this.sortOnServer(id, order);
       }
     }
   }
@@ -38,7 +44,13 @@ export default class SortableTable {
     const clientHeight = document.documentElement.clientHeight;
     const bottom = Math.floor(document.documentElement.getBoundingClientRect().bottom);
     if (!this.isDataLoading && bottom <= clientHeight + 100) {
-      await this.sortOnServer();
+
+      try {
+        await this.sortOnServer();
+      } catch (e) {
+        return [];
+      }
+      //await this.sortOnServer();
     }
   }
 
@@ -76,23 +88,27 @@ export default class SortableTable {
       this.subElements.main.classList.add('sortable-table_loading');
       this.isDataLoading = true;
 
-      const result = await fetch(queryStr);
-      const newData = await result.json();
+      try {
+        const result = await fetch(queryStr);
+        const newData = await result.json();
 
-      if (newData.length < elementCount) {
-        this.serverIsEmpty = true;
+        if (newData.length < elementCount) {
+          this.serverIsEmpty = true;
+        }
+
+        this.isDataLoading = false;
+        this.subElements.main.classList.remove('sortable-table_loading');
+
+        if (!newData.length) {
+          this.subElements.main.classList.add('sortable-table_empty');
+        }
+
+        this.data = [...this.data, ...newData];
+        this.subElements.body.innerHTML = this.body(this.data);
+        this.step = this.step + elementCount;
+      } catch (e) {
+        return [];
       }
-
-      this.isDataLoading = false;
-      this.subElements.main.classList.remove('sortable-table_loading');
-
-      if (!newData.length) {
-        this.subElements.main.classList.add('sortable-table_empty');
-      }
-
-      this.data = [...this.data, ...newData];
-      this.subElements.body.innerHTML = this.body(this.data);
-      this.step = this.step + elementCount;
     }
   }
 
