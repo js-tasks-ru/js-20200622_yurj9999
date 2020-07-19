@@ -24,8 +24,8 @@ export default class ColumnChart {
     this.formatHeading = formatHeading;
     this.link = link;
 
-    this.prepareData();
     this.render();
+    this.update();
   }
 
   getSubElements(mainElement) {
@@ -52,17 +52,6 @@ export default class ColumnChart {
     return this.label === 'sales' ? this.formatHeading(value) : value;
   }
 
-  async prepareData() {
-    try {
-      if (this.url) {
-        this.data = await this.getDataFromServer();
-      }
-      this.update();
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   render() {
     if (!this.data.length) {
       this.element.classList.add('column-chart_loading');
@@ -77,29 +66,21 @@ export default class ColumnChart {
     this.getSubElements(this.element);
   }
 
-  async getDataFromServer(fromDate = this.range.from, toDate = this.range.to) {
-    try {
-      const isoFrom = fromDate.toISOString();
-      const isoTo = toDate.toISOString();
-      const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
-      return Object.values(await response.json());
-    } catch (error) {
-      console.log(error);
-    }
+  async getDataFromServer(fromDate, toDate) {
+    const isoFrom = fromDate.toISOString();
+    const isoTo = toDate.toISOString();
+    const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
+    return Object.values(await response.json());
   }
 
-  async update(fromDate, toDate) {
-    try {
-      this.element.classList.add('column-chart_loading');
-      this.data = await this.getDataFromServer(fromDate, toDate);
+  async update(fromDate = this.range.from, toDate = this.range.to) {
+    this.element.classList.add('column-chart_loading');
+    this.data = await this.getDataFromServer(fromDate, toDate);
 
-      if (this.data.length) {
-        this.element.classList.remove('column-chart_loading');
-        this.subElements.header.innerHTML = this.setHeaderValue(this.data);
-        this.subElements.body.innerHTML = this.setColumns(this.data);
-      }
-    } catch (error) {
-      console.log(error);
+    if (this.data.length) {
+      this.element.classList.remove('column-chart_loading');
+      this.subElements.header.innerHTML = this.setHeaderValue(this.data);
+      this.subElements.body.innerHTML = this.setColumns(this.data);
     }
   }
 
