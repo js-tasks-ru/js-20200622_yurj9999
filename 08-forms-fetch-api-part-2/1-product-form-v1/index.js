@@ -37,7 +37,6 @@ export default class ProductForm {
     const preparedData = {
       description: productDescription.value,
       discount: Number(discount.value),
-      id: this.id,
       images: [],
       price: Number(price.value),
       quantity: Number(quantity.value),
@@ -53,10 +52,12 @@ export default class ProductForm {
       });
     });
 
-    await fetchJson(this.getUpdatedProductUrl(), {
-      method: 'PATCH',
-      body: JSON.stringify(preparedData)
-    });
+    if (!!this.id) {
+      preparedData.id = this.id;
+      this.save(preparedData);
+    } else {
+      this.update(preparedData);
+    }
   }
 
   selectedElement = (event) => {
@@ -89,14 +90,40 @@ export default class ProductForm {
     this.subElements.imageListContainer.firstElementChild.append(this.setPhotoElement(img.name, imgUploadResponse.data.link));
   }
 
-
-
-  // добавить польз событие после успешной загрузки на сервер
-
   constructor(id = '') {
     this.id = id;
+  }
 
-    this.render();
+  async save(data) {
+    await fetchJson(this.getUpdatedProductUrl(), {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+
+    this.element.dispatchEvent(new CustomEvent('product-updated', {
+      detail: 'Товар обновлен',
+      bubbles: true
+    }));
+  }
+
+  async update(data) {
+    await fetchJson(this.getUpdatedProductUrl(), {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+
+    this.element.dispatchEvent(new CustomEvent('product-saved', {
+      detail: 'Товар сохранен',
+      bubbles: true
+    }));
+
+    this.updateDom();
   }
 
   setPhotoElement(name, url) {
@@ -133,13 +160,13 @@ export default class ProductForm {
             <div class="form-group form-group__half_left">
                 <fieldset>
                     <label class="form-label">Название товара</label>
-                    <input required="" data-element="title" type="text" name="title" class="form-control" placeholder="Название товара">
+                    <input id="title" required="" data-element="title" type="text" name="title" class="form-control" placeholder="Название товара">
                 </fieldset>
             </div>
 
             <div class="form-group form-group__wide">
                 <label class="form-label">Описание</label>
-                <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара"></textarea>
+                <textarea id="description" required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара"></textarea>
             </div>
 
             <div class="form-group form-group__wide" data-element="sortableListContainer">
@@ -154,28 +181,28 @@ export default class ProductForm {
 
             <div class="form-group form-group__half_left">
                 <label class="form-label">Категория</label>
-                <select data-element="categories" class="form-control" name="subcategory"></select>
+                <select id="subcategory" data-element="categories" class="form-control" name="subcategory"></select>
             </div>
 
             <div class="form-group form-group__half_left form-group__two-col">
                 <fieldset>
                     <label class="form-label">Цена ($)</label>
-                    <input data-element="price" required="" type="number" name="price" class="form-control" placeholder="100">
+                    <input id="price" data-element="price" required="" type="number" name="price" class="form-control" placeholder="100">
                 </fieldset>
                 <fieldset>
                     <label class="form-label">Скидка ($)</label>
-                    <input data-element="discount" required="" type="number" name="discount" class="form-control" placeholder="0">
+                    <input id="discount" data-element="discount" required="" type="number" name="discount" class="form-control" placeholder="0">
                 </fieldset>
             </div>
 
             <div class="form-group form-group__part-half">
                 <label class="form-label">Количество</label>
-                <input data-element="quantity" required="" type="number" class="form-control" name="quantity" placeholder="1">
+                <input id="quantity" data-element="quantity" required="" type="number" class="form-control" name="quantity" placeholder="1">
             </div>
 
             <div class="form-group form-group__part-half">
                 <label class="form-label">Статус</label>
-                <select data-element="status" class="form-control" name="status">
+                <select id="status" data-element="status" class="form-control" name="status">
                     <option value="1">Активен</option>
                     <option value="0">Неактивен</option>
                 </select>
@@ -249,7 +276,8 @@ export default class ProductForm {
         if (this.id && key.id.includes(this.selectedCategory)) {
           this.selectedSubcategory = key.id;
         }
-        this.categories.push(`<option ${this.id && key.id.includes(this.selectedCategory) ? 'selected' : ''} value="${key.id}">${item.title} > ${key.title}</option>`);
+        this.categories.push(
+          `<option ${this.id && key.id.includes(this.selectedCategory) ? 'selected' : ''} value="${key.id}">${item.title} > ${key.title}</option>`);
       }
     });
   }
@@ -275,6 +303,7 @@ export default class ProductForm {
     this.images.map((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
 
     categories.innerHTML = this.categories.map(item => item).join('');
+
     price.value = !!this.price ? this.price : '';
     discount.value = this.id ? this.discount : '';
     quantity.value = !!this.quantity ? this.quantity : '';
