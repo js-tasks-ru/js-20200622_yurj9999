@@ -95,13 +95,12 @@ export default class ProductForm {
 
 
 
-  // польз событие после успешной загрузки на сервер
+  // добавить польз событие после успешной загрузки на сервер
 
   constructor(id = '') {
-
     this.id = id;
 
-    this.render(); //вызывается дважды
+    this.render();
   }
 
   setPhotoElement(name, url) {
