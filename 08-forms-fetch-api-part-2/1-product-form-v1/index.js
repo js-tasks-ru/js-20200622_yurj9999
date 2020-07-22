@@ -53,13 +53,10 @@ export default class ProductForm {
       });
     });
 
-    const res = await fetch(this.getUpdatedProductUrl(), {
+    await fetchJson(this.getUpdatedProductUrl(), {
       method: 'PATCH',
       body: JSON.stringify(preparedData)
     });
-
-    console.log(await res.json());
-
   }
 
   selectedElement = (event) => {
@@ -81,7 +78,7 @@ export default class ProductForm {
 
     formData.append('image', img, img.name);
 
-    const imgUploadResponse = await fetch(this.getImgurUrl(), {
+    const imgUploadResponse = await fetchJson(this.getImgurUrl(), {
       headers: {
         Authorization: `Client-ID ${IMGUR_CLIENT_ID}`
       },
@@ -89,8 +86,7 @@ export default class ProductForm {
       body: formData
     });
 
-    const result = await imgUploadResponse.json();
-    this.subElements.imageListContainer.firstElementChild.append(this.setPhotoElement(img.name, result.data.link));
+    this.subElements.imageListContainer.firstElementChild.append(this.setPhotoElement(img.name, imgUploadResponse.data.link));
   }
 
 
@@ -233,8 +229,7 @@ export default class ProductForm {
 
   async getData() {
     if (this.id) {
-      const productResponse = await fetch(this.getProductUrl());
-      const productData = await productResponse.json();
+      const productData = await fetchJson(this.getProductUrl());
 
       this.title = productData[0].title;
       this.description = productData[0].description;
@@ -247,10 +242,9 @@ export default class ProductForm {
       this.nameSaveButton = 'Сохранить товар';
     }
 
-    const categoriesResponse = await fetch(this.getCategoriesUrl());
-    const categoriesData = await categoriesResponse.json();
+    const categoriesResponse = await fetchJson(this.getCategoriesUrl());
 
-    categoriesData.forEach((item) => {
+    categoriesResponse.forEach((item) => {
       for (const key of item.subcategories) {
         if (this.id && key.id.includes(this.selectedCategory)) {
           this.selectedSubcategory = key.id;
