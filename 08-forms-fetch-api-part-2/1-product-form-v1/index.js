@@ -201,7 +201,6 @@ export default class ProductForm {
             </div>
 
         </form>
-
     </div>`;
 
     this.element = element.firstElementChild;
