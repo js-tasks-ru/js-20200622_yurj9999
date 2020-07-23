@@ -208,6 +208,8 @@ export default class ProductForm {
     this.getSubElements(this.element);
     this.addListeners();
     this.updateDom();
+
+    return this.element;
   }
 
   addListeners() {
