@@ -82,7 +82,7 @@ export default class ProductForm {
         headers: {
           'Content-Type': 'application/json'
         },
-        method: this.isUpdated ? 'PUT' : 'PATCH',
+        method: this.isUpdated ? 'PATCH' : 'PUT',
         body: JSON.stringify(preparedData)
       });
     } catch (error) {
@@ -121,14 +121,14 @@ export default class ProductForm {
 
   save() {
     this.element.dispatchEvent(new CustomEvent('product-updated', {
-      detail: 'Товар обновлен',
+      detail: 'Товар сохранен',
       bubbles: true
     }));
   }
 
   update() {
     this.element.dispatchEvent(new CustomEvent('product-saved', {
-      detail: 'Товар сохранен',
+      detail: 'Товар обновлен',
       bubbles: true
     }));
     this.updateDom();
