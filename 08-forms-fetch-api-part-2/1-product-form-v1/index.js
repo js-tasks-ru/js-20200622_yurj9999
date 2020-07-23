@@ -12,6 +12,7 @@ export default class ProductForm {
   formData = {};
   categoriesList = [];
   saveButtonCaption = '';
+  isUpdated = false;
 
   // метод обработки ошибок
   errorHandler = () => {
@@ -45,7 +46,7 @@ export default class ProductForm {
     this.selectedSubcategory = event.target.value;
   }
 
-  sendDataToServer = (event) => {
+  sendDataToServer = async (event) => {
     event.preventDefault();
 
     const {productForm, imageListContainer} = this.subElements;
@@ -71,10 +72,24 @@ export default class ProductForm {
 
     if (!!this.id) {
       preparedData.id = this.id;
-      this.save(preparedData);
+      this.isUpdated = false;
     } else {
-      this.update(preparedData);
+      this.isUpdated = true;
     }
+
+    try {
+      await fetchJson(new URL('api/rest/products', BACKEND_URL), {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        method: this.isUpdated ? 'PUT' : 'PATCH',
+        body: JSON.stringify(preparedData)
+      });
+    } catch (error) {
+      return this.errorHandler();
+    }
+
+    this.isUpdated ? this.update() : this.save();
   }
 
   constructor(id = '') {
@@ -104,30 +119,14 @@ export default class ProductForm {
     return photoElement;
   }
 
-  async fetchProductModify(method, data) {
-    try {
-      await fetchJson(new URL('api/rest/products', BACKEND_URL), {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        method: method,
-        body: JSON.stringify(data)
-      });
-    } catch (error) {
-      return this.errorHandler();
-    }
-  }
-
-  save(data) {
-    this.fetchProductModify('PATCH', data);
+  save() {
     this.element.dispatchEvent(new CustomEvent('product-updated', {
       detail: 'Товар обновлен',
       bubbles: true
     }));
   }
 
-  update(data) {
-    this.fetchProductModify('PUT', data);
+  update() {
     this.element.dispatchEvent(new CustomEvent('product-saved', {
       detail: 'Товар сохранен',
       bubbles: true
