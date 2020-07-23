@@ -9,6 +9,7 @@ export default class ProductForm {
 
   element = null;
   subElements = {};
+
   selectedSubcategory = '';
   title = '';
   description = '';
@@ -254,10 +255,22 @@ export default class ProductForm {
     return new URL('api/rest/products', BACKEND_URL);
   }
 
-  async getData() {
-    if (this.id) {
-      const productData = await fetchJson(this.getProductUrl());
+  async getFetchData() {
+    const productResponse = fetchJson(this.getProductUrl());
+    const categoriesResponse = fetchJson(this.getCategoriesUrl());
 
+    return await Promise.resolve({
+      productResponse, categoriesResponse
+    });
+  }
+
+  async preparedData() {
+    const result = await this.getFetchData();
+
+    const productData = await result.productResponse;
+    const categoriesData = await result.categoriesResponse;
+
+    if (productData.length) {
       this.title = productData[0].title;
       this.description = productData[0].description;
       this.images = productData[0].images;
@@ -269,21 +282,19 @@ export default class ProductForm {
       this.nameSaveButton = 'Сохранить товар';
     }
 
-    const categoriesResponse = await fetchJson(this.getCategoriesUrl());
-
-    categoriesResponse.forEach((item) => {
-      for (const key of item.subcategories) {
-        if (this.id && key.id.includes(this.selectedCategory)) {
-          this.selectedSubcategory = key.id;
+    categoriesData.forEach((item) => {
+      item.subcategories.forEach((subElement) => {
+        if (this.id && subElement.id.includes(this.selectedCategory)) {
+          this.selectedSubcategory = subElement.id;
         }
-        this.categories.push(
-          `<option ${this.id && key.id.includes(this.selectedCategory) ? 'selected' : ''} value="${key.id}">${item.title} > ${key.title}</option>`);
-      }
+        const selected = this.id && subElement.id.includes(this.selectedCategory) ? 'selected' : '';
+        this.categories.push(`<option ${selected} value="${subElement.id}">${item.title} > ${subElement.title}</option>`);
+      });
     });
   }
 
   async updateDom() {
-    await this.getData();
+    await this.preparedData();
 
     const {
       title,
@@ -303,7 +314,6 @@ export default class ProductForm {
     this.images.map((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
 
     categories.innerHTML = this.categories.map(item => item).join('');
-
     price.value = !!this.price ? this.price : '';
     discount.value = this.id ? this.discount : '';
     quantity.value = !!this.quantity ? this.quantity : '';
