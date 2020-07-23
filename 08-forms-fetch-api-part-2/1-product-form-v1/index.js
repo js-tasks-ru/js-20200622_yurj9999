@@ -78,18 +78,22 @@ export default class ProductForm {
     }
 
     try {
-      await fetchJson(new URL('api/rest/products', BACKEND_URL), {
+      const result = await fetchJson(new URL('api/rest/products', BACKEND_URL), {
         headers: {
           'Content-Type': 'application/json'
         },
-        method: this.isUpdated ? 'PATCH' : 'PUT',
+        method: this.isUpdated ? 'PUT' : 'PATCH',
         body: JSON.stringify(preparedData)
       });
+
+      this.id = result.id;
+      this.updateDom();
+
+      this.isUpdated ? this.update() : this.save();
+
     } catch (error) {
       return this.errorHandler();
     }
-
-    this.isUpdated ? this.update() : this.save();
   }
 
   constructor(id = '') {
