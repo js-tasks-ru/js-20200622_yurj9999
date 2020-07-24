@@ -87,7 +87,7 @@ export default class ProductForm {
       });
 
       this.id = result.id;
-      //this.updateDom();
+      this.updateDom();
 
       this.isUpdated ? this.update() : this.save();
 
@@ -135,12 +135,10 @@ export default class ProductForm {
       detail: 'Товар обновлен',
       bubbles: true
     }));
-
-    //this.updateDom();
-
+    this.updateDom();
   }
 
-  async render() {
+  render() {
     const element = document.createElement('div');
 
     element.innerHTML = `<div class="product-form">
@@ -209,7 +207,7 @@ export default class ProductForm {
 
     this.getSubElements(this.element);
     this.addListeners();
-    await Promise.resolve(this.updateDom());
+    this.updateDom();
 
     return this.element;
   }
@@ -261,7 +259,6 @@ export default class ProductForm {
         const {subcategories, title} = item;
         this.setSubcategoriesList(subcategories, title);
       });
-      return this.formData;
     } catch (error) {
       return this.errorHandler();
     }
@@ -269,25 +266,24 @@ export default class ProductForm {
 
   async updateDom() {
     try {
-      const formData = await this.preparedData();
+      await this.preparedData();
 
       const {productForm, imageListContainer} = this.subElements;
       const {title, description, subcategory, price, discount, quantity, status, save} = productForm;
 
-      title.value = this.id ? formData.title : '';
-      description.value = this.id ? formData.description : '';
-      price.value = this.id ? formData.price : 100;
-      discount.value = this.id ? formData.discount : 0;
-      quantity.value = this.id ? formData.quantity : 1;
-      status.value = this.id ? formData.status : 1;
+      title.value = this.id ? this.formData.title : '';
+      description.value = this.id ? this.formData.description : '';
+      price.value = this.id ? this.formData.price : 100;
+      discount.value = this.id ? this.formData.discount : 0;
+      quantity.value = this.id ? this.formData.quantity : 1;
+      status.value = this.id ? this.formData.status : 1;
       save.textContent = this.id ? 'Сохранить товар' : 'Добавить товар';
 
       subcategory.innerHTML = this.categoriesList.map(item => item).join('');
 
       if (this.id) {
-        formData.images.forEach((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
+        this.formData.images.forEach((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
       }
-
     } catch (error) {
       return this.errorHandler();
     }
