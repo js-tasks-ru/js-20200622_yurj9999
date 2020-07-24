@@ -253,6 +253,8 @@ export default class ProductForm {
       const productData = await result[0];
       const categoriesData = await result[1];
       if (productData.length) {
+
+        // здесь почему-то объект заполняется
         this.formData = {...productData[0]};
       }
       categoriesData.forEach((item) => {
@@ -266,6 +268,8 @@ export default class ProductForm {
 
   async updateDom() {
     try {
+
+      // здесь, если убрать await, то this.formData становится {}
       await this.preparedData();
 
       const {productForm, imageListContainer} = this.subElements;
