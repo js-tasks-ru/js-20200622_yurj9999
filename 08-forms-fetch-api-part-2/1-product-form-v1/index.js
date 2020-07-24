@@ -54,6 +54,8 @@ export default class ProductForm {
     newFormData.subcategory = this.selectedSubcategory;
     newFormData.images = [];
 
+    this.id ? newFormData.id = this.id : null;
+
     images.forEach((image) => {
       newFormData.images.push({
         source: image.children[1].value,
@@ -75,9 +77,6 @@ export default class ProductForm {
 
     this.id ? this.save() : this.update();
   }
-
-
-
 
   constructor(id = '') {
     this.id = id;
@@ -186,6 +185,7 @@ export default class ProductForm {
     </div>`;
 
     this.element = element.firstElementChild;
+
     this.getSubElements(this.element);
     this.addListeners();
 
@@ -203,8 +203,6 @@ export default class ProductForm {
   }
 
   productLoading(product) {
-
-    // возвращает id но он не нужен ?
     const {description, discount, images, price, quantity, status, subcategory, title} = product[0];
     const {productForm, imageListContainer} = this.subElements;
     const formImage = imageListContainer.firstElementChild;
