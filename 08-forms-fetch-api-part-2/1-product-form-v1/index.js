@@ -9,15 +9,6 @@ export default class ProductForm {
   element = null;
   subElements = {};
   selectedSubcategory = '';
-  formData = {};
-  categoriesList = [];
-  saveButtonCaption = '';
-  isUpdated = false;
-
-  // метод обработки ошибок
-  errorHandler = () => {
-    return [];
-  }
 
   callFileloader = () => {
     this.subElements.productForm.elements.fileLoader.click();
@@ -26,19 +17,20 @@ export default class ProductForm {
   uploadFile = async (event) => {
     const img = event.target.files[0];
     const formData = new FormData();
+    const formImage = this.subElements.imageListContainer.firstElementChild;
     formData.append('image', img, img.name);
 
     try {
-      const imgUploadResponse = await fetchJson(new URL('3/image', IMGUR_URL), {
+      const imgUploadResponse = await fetchJson(`${IMGUR_URL}/3/image`, {
         headers: {
           Authorization: `Client-ID ${IMGUR_CLIENT_ID}`
         },
         method: 'POST',
         body: formData
       });
-      this.subElements.imageListContainer.firstElementChild.append(this.setPhotoElement(img.name, imgUploadResponse.data.link));
+      formImage.append(this.setPhotoElement(img.name, imgUploadResponse.data.link));
     } catch (error) {
-      return this.errorHandler();
+      return [];
     }
   }
 
@@ -49,55 +41,60 @@ export default class ProductForm {
   sendDataToServer = async (event) => {
     event.preventDefault();
 
-    const {productForm, imageListContainer} = this.subElements;
-    const {title, description, price, discount, quantity, status} = productForm;
+    const form = this.subElements.productForm.elements;
+    const images = this.subElements.imageListContainer.firstElementChild.childNodes;
+    const newFormData = {};
 
-    const preparedData = {
-      description: description.value,
-      discount: Number(discount.value),
-      images: [],
-      price: Number(price.value),
-      quantity: Number(quantity.value),
-      status: Number(status.value),
-      subcategory: this.selectedSubcategory,
-      title: title.value
-    };
+    newFormData.title = form.title.value;
+    newFormData.description = form.description.value;
+    newFormData.discount = Number(form.discount.value);
+    newFormData.price = Number(form.price.value);
+    newFormData.quantity = Number(form.quantity.value);
+    newFormData.status = Number(form.status.value);
+    newFormData.subcategory = this.selectedSubcategory;
+    newFormData.images = [];
 
-    imageListContainer.firstElementChild.childNodes.forEach((item) => {
-      preparedData.images.push({
-        source: item.children[1].value,
-        url: item.children[0].value
+    images.forEach((image) => {
+      newFormData.images.push({
+        source: image.children[1].value,
+        url: image.children[0].value
       });
     });
 
-    if (!!this.id) {
-      preparedData.id = this.id;
-      this.isUpdated = false;
-    } else {
-      this.isUpdated = true;
-    }
-
     try {
-      const result = await fetchJson(new URL('api/rest/products', BACKEND_URL), {
+      await fetchJson(`${BACKEND_URL}/api/rest/products`, {
         headers: {
           'Content-Type': 'application/json'
         },
-        method: this.isUpdated ? 'PUT' : 'PATCH',
-        body: JSON.stringify(preparedData)
+        method: this.id ? 'PATCH' : 'PUT',
+        body: JSON.stringify(newFormData)
       });
-
-      this.id = result.id;
-      this.updateDom();
-
-      this.isUpdated ? this.update() : this.save();
-
     } catch (error) {
-      return this.errorHandler();
+      return [];
     }
+
+    this.id ? this.save() : this.update();
   }
+
+
+
 
   constructor(id = '') {
     this.id = id;
+  }
+
+  save() {
+    this.element.dispatchEvent(new CustomEvent('product-updated', {
+      detail: 'Товар сохранен',
+      bubbles: true
+    }));
+  }
+
+  update() {
+    this.element.dispatchEvent(new CustomEvent('product-saved', {
+      detail: 'Товар обновлен',
+      bubbles: true
+    }));
   }
 
   getSubElements(mainElement) {
@@ -123,22 +120,7 @@ export default class ProductForm {
     return photoElement;
   }
 
-  save() {
-    this.element.dispatchEvent(new CustomEvent('product-updated', {
-      detail: 'Товар сохранен',
-      bubbles: true
-    }));
-  }
-
-  update() {
-    this.element.dispatchEvent(new CustomEvent('product-saved', {
-      detail: 'Товар обновлен',
-      bubbles: true
-    }));
-    this.updateDom();
-  }
-
-  render() {
+  async render() {
     const element = document.createElement('div');
 
     element.innerHTML = `<div class="product-form">
@@ -197,30 +179,64 @@ export default class ProductForm {
             </div>
 
             <div class="form-buttons">
-                <button type="submit" name="save" class="button-primary-outline">${this.saveButtonCaption}</button>
+                <button type="submit" name="save" class="button-primary-outline">${this.id ? 'Сохранить товар' : 'Добавить товар'}</button>
             </div>
 
         </form>
     </div>`;
 
     this.element = element.firstElementChild;
-
     this.getSubElements(this.element);
     this.addListeners();
-    this.updateDom();
+
+    try {
+      const [product, categories] = await this.getFetchData();
+      if (this.id) {
+        this.productLoading(product);
+      }
+      this.categoriesLoading(categories);
+    } catch (error) {
+      return [];
+    }
 
     return this.element;
   }
 
-  addListeners() {
-    const {productForm} = this.subElements;
-    const {uploadImage, fileLoader, subcategory} = productForm.elements;
+  productLoading(product) {
 
-    window.addEventListener('unhandledrejection', this.errorHandler);
+    // возвращает id но он не нужен ?
+    const {description, discount, images, price, quantity, status, subcategory, title} = product[0];
+    const {productForm, imageListContainer} = this.subElements;
+    const formImage = imageListContainer.firstElementChild;
+
+    productForm.title.value = title;
+    productForm.description.value = description;
+    images.map(image => formImage.append(this.setPhotoElement(image.source, image.url)));
+    productForm.price.value = price;
+    productForm.discount.value = discount;
+    productForm.quantity.value = quantity;
+    productForm.status.value = status;
+
+    this.selectedSubcategory = subcategory;
+  }
+
+  categoriesLoading(categories) {
+    const list = this.subElements.productForm.subcategory;
+    for (const category of categories) {
+      for (const subcategory of category.subcategories) {
+        const selected = subcategory.id === this.selectedSubcategory ? 'selected' : '';
+        list.innerHTML += `<option ${selected} value="${category.id}">${category.title} > ${subcategory.title}</option>`;
+      }
+    }
+  }
+
+  addListeners() {
+    const {uploadImage, fileLoader, subcategory} = this.subElements.productForm.elements;
+
     uploadImage.addEventListener('click', this.callFileloader);
     fileLoader.addEventListener('change', this.uploadFile);
     subcategory.addEventListener('change', this.selectedElement);
-    productForm.addEventListener('submit', this.sendDataToServer);
+    this.subElements.productForm.addEventListener('submit', this.sendDataToServer);
   }
 
   async getFetchData() {
@@ -237,72 +253,13 @@ export default class ProductForm {
     return await Promise.all([productResponse, categoriesResponse]);
   }
 
-  setSubcategoriesList(data, parentTitle) {
-    data.forEach((category) => {
-      const isIdentCategory = this.id && category.id.includes(this.formData.subcategory);
-      if (isIdentCategory) {
-        this.selectedSubcategory = category.id;
-      }
-      this.categoriesList.push(`<option ${isIdentCategory ? 'selected' : ''} value="${category.id}">${parentTitle} > ${category.title}</option>`);
-    });
-  }
-
-  async preparedData() {
-    try {
-      const result = await this.getFetchData();
-      const productData = await result[0];
-      const categoriesData = await result[1];
-      if (productData.length) {
-
-        // здесь почему-то объект заполняется
-        this.formData = {...productData[0]};
-      }
-      categoriesData.forEach((item) => {
-        const {subcategories, title} = item;
-        this.setSubcategoriesList(subcategories, title);
-      });
-    } catch (error) {
-      return this.errorHandler();
-    }
-  }
-
-  async updateDom() {
-    try {
-
-      // здесь, если убрать await, то this.formData становится {}
-      await this.preparedData();
-
-      const {productForm, imageListContainer} = this.subElements;
-      const {title, description, subcategory, price, discount, quantity, status, save} = productForm;
-
-      title.value = this.id ? this.formData.title : '';
-      description.value = this.id ? this.formData.description : '';
-      price.value = this.id ? this.formData.price : 100;
-      discount.value = this.id ? this.formData.discount : 0;
-      quantity.value = this.id ? this.formData.quantity : 1;
-      status.value = this.id ? this.formData.status : 1;
-      save.textContent = this.id ? 'Сохранить товар' : 'Добавить товар';
-
-      subcategory.innerHTML = this.categoriesList.map(item => item).join('');
-
-      if (this.id) {
-        this.formData.images.forEach((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
-      }
-    } catch (error) {
-      return this.errorHandler();
-    }
-  }
-
   remove() {
-    const {productForm} = this.subElements;
-    const {uploadImage, fileLoader, subcategory} = productForm.elements;
+    const {uploadImage, fileLoader, subcategory} = this.subElements.productForm.elements;
 
-    window.removeEventListener('unhandledrejection', this.errorHandler);
-    productForm.removeEventListener('submit', this.sendDataToServer);
     uploadImage.removeEventListener('click', this.callFileloader);
     fileLoader.removeEventListener('change', this.uploadFile);
     subcategory.removeEventListener('change', this.selectedElement);
-
+    this.subElements.productForm.removeEventListener('submit', this.sendDataToServer);
     this.element.remove();
   }
 
