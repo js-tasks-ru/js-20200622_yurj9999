@@ -87,7 +87,7 @@ export default class ProductForm {
       });
 
       this.id = result.id;
-      this.updateDom();
+      //this.updateDom();
 
       this.isUpdated ? this.update() : this.save();
 
@@ -135,10 +135,12 @@ export default class ProductForm {
       detail: 'Товар обновлен',
       bubbles: true
     }));
-    this.updateDom();
+
+    //this.updateDom();
+
   }
 
-  render() {
+  async render() {
     const element = document.createElement('div');
 
     element.innerHTML = `<div class="product-form">
@@ -207,7 +209,7 @@ export default class ProductForm {
 
     this.getSubElements(this.element);
     this.addListeners();
-    this.updateDom();
+    await Promise.resolve(this.updateDom());
 
     return this.element;
   }
@@ -234,7 +236,7 @@ export default class ProductForm {
     const productResponse = fetchJson(productUrl);
     const categoriesResponse = fetchJson(categoryUrl);
 
-    return await Promise.resolve({ productResponse, categoriesResponse });
+    return await Promise.all([productResponse, categoriesResponse]);
   }
 
   setSubcategoriesList(data, parentTitle) {
@@ -250,8 +252,8 @@ export default class ProductForm {
   async preparedData() {
     try {
       const result = await this.getFetchData();
-      const productData = await result.productResponse;
-      const categoriesData = await result.categoriesResponse;
+      const productData = await result[0];
+      const categoriesData = await result[1];
       if (productData.length) {
         this.formData = {...productData[0]};
       }
@@ -259,6 +261,7 @@ export default class ProductForm {
         const {subcategories, title} = item;
         this.setSubcategoriesList(subcategories, title);
       });
+      return this.formData;
     } catch (error) {
       return this.errorHandler();
     }
@@ -266,24 +269,25 @@ export default class ProductForm {
 
   async updateDom() {
     try {
-      await this.preparedData();
+      const formData = await this.preparedData();
 
       const {productForm, imageListContainer} = this.subElements;
       const {title, description, subcategory, price, discount, quantity, status, save} = productForm;
 
-      title.value = this.id ? this.formData.title : '';
-      description.value = this.id ? this.formData.description : '';
-      price.value = this.id ? this.formData.price : 100;
-      discount.value = this.id ? this.formData.discount : 0;
-      quantity.value = this.id ? this.formData.quantity : 1;
-      status.value = this.id ? this.formData.status : 1;
+      title.value = this.id ? formData.title : '';
+      description.value = this.id ? formData.description : '';
+      price.value = this.id ? formData.price : 100;
+      discount.value = this.id ? formData.discount : 0;
+      quantity.value = this.id ? formData.quantity : 1;
+      status.value = this.id ? formData.status : 1;
       save.textContent = this.id ? 'Сохранить товар' : 'Добавить товар';
 
       subcategory.innerHTML = this.categoriesList.map(item => item).join('');
 
       if (this.id) {
-        this.formData.images.forEach((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
+        formData.images.forEach((image) => imageListContainer.firstElementChild.append(this.setPhotoElement(image.source, image.url)));
       }
+
     } catch (error) {
       return this.errorHandler();
     }
