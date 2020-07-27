@@ -100,6 +100,11 @@ export default class ProductForm {
           <ul class="sortable-list" data-element="imageListContainer">
             ${this.createImagesList()}
           </ul>
+        <div class="form-group form-group__wide" data-element="sortable-list-container">
+          <label class="form-label">Фото</label>
+          <ul class="sortable-list" data-element="imageListContainer">
+            ${this.createImagesList()}
+          </ul>
           <button data-element="uploadImage" type="button" class="button-primary-outline">
             <span>Загрузить</span>
           </button>
