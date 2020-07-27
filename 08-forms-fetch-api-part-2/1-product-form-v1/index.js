@@ -197,19 +197,15 @@ export default class ProductForm {
   async save() {
     const product = this.getFormData();
 
-    try {
-      const result = await fetchJson(`${BACKEND_URL}/api/rest/products`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(product)
-      });
+    const result = await fetchJson(`${BACKEND_URL}/api/rest/products`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(product)
+    });
 
-      this.dispatchEvent(result.id);
-    } catch (error) {
-      console.error('something went wrong', error);
-    }
+    this.dispatchEvent(result.id);
   }
 
   getFormData () {
