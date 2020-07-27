@@ -190,3 +190,4 @@ export default class SortableList {
     this.remove();
   }
 }
+
