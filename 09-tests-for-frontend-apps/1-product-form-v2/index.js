@@ -98,6 +98,9 @@ export default class ProductForm {
         <div class="form-group form-group__wide">
           <label class="form-label">Фото</label>
           <div data-element="imageListContainer"></div>
+        <div class="form-group form-group__wide">
+          <label class="form-label">Фото</label>
+          <div data-element="imageListContainer"></div>
           <button data-element="uploadImage" type="button" class="button-primary-outline">
             <span>Загрузить</span>
           </button>
