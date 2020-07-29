@@ -98,8 +98,8 @@ export default class SortableList {
     this.elementInitialIndex = [...this.element.children].indexOf(itemElem);
 
     this.pointerInitialShift = {
-      x: clientX - itemElem.getBoundingClientRect().x,
-      y: clientY - itemElem.getBoundingClientRect().y
+      x: clientX - itemElem.getBoundingClientRect().left,
+      y: clientY - itemElem.getBoundingClientRect().top
     };
 
     this.draggingElem = itemElem;
