@@ -1,6 +1,5 @@
 export default class SortableList {
   element;
-
   onDocumentPointerMove = ({ clientX, clientY}) => {
     this.moveDraggingAt(clientX, clientY);
 
@@ -98,8 +97,8 @@ export default class SortableList {
     this.elementInitialIndex = [...this.element.children].indexOf(itemElem);
 
     this.pointerInitialShift = {
-      x: clientX - itemElem.getBoundingClientRect().left,
-      y: clientY - itemElem.getBoundingClientRect().top
+      x: clientX - itemElem.getBoundingClientRect().x,
+      y: clientY - itemElem.getBoundingClientRect().y
     };
 
     this.draggingElem = itemElem;
@@ -190,4 +189,3 @@ export default class SortableList {
     this.remove();
   }
 }
-
