@@ -6,6 +6,19 @@ describe('tests-for-frontend-apps/sortable-list', () => {
   const data = [1, 2, 3];
 
   beforeEach(() => {
+    Element.prototype.getBoundingClientRect = jest.fn(() => {
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+      };
+    });
+    
     sortableList = new SortableList({
       items: data.map(item => {
         const element = document.createElement('li');
