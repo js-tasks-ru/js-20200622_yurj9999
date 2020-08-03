@@ -1,6 +1,5 @@
 export default class SortableList {
   element;
-
   onDocumentPointerMove = ({ clientX, clientY}) => {
     this.moveDraggingAt(clientX, clientY);
 
