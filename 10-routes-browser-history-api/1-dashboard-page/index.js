@@ -8,17 +8,32 @@ import fetchJson from './utils/fetch-json.js';
 const BACKEND_URL = 'https://course-js.javascript.ru/';
 
 export default class Page {
-
   element = null;
   subElements = {};
-  rangePicker = null;
-  chart = null;
+
+  defaultDates = {
+    from: new Date(2020, 6, 1),
+    to: new Date()
+  };
+
+
+
+
+  rangeEvent = (event) => {
+    console.log(event.detail);
+
+
+
+  }
+
+
 
   constructor() {
-    this.rangePicker = new RangePicker({
-      from: new Date(2020, 6, 4),
-      to: new Date()
-    });
+    this.addListeners();
+  }
+
+  addListeners() {
+    document.addEventListener('date-select', this.rangeEvent);
   }
 
   getSubElements(element) {
@@ -29,9 +44,55 @@ export default class Page {
     return subElements;
   }
 
-  render() {
 
+
+  pasteComponents() {
+    const {rangePicker, charts} = this.subElements;
+    const {from, to} = this.defaultDates;
+
+    const range = new RangePicker({
+      from, to
+    });
+    const orders = new ColumnChart({
+      label: 'orders',
+      link: '#',
+      url: 'api/dashboard/orders',
+      range: {
+        from, to
+      }
+    });
+    const sales = new ColumnChart({
+      label: 'sales',
+      url: 'api/dashboard/sales',
+      range: {
+        from, to
+      }
+    });
+    const customers = new ColumnChart({
+      label: 'customers',
+      url: 'api/dashboard/customers',
+      range: {
+        from, to
+      }
+    });
+    const sortableTable = new SortableTable({
+      header
+    });
+
+    orders.element.classList.add('dashboard__chart_orders');
+    sales.element.classList.add('dashboard__chart_sales');
+    customers.element.classList.add('dashboard__chart_customers');
+
+    rangePicker.append(range.element);
+    charts.append(orders.element);
+    charts.append(sales.element);
+    charts.append(customers.element);
+
+  }
+
+  render() {
     this.element = document.createElement('div');
+    this.element.setAttribute('data-element', 'mainContainer');
     this.element.setAttribute('class', 'dashboard full-height flex-column');
 
     this.element.innerHTML = `<div data-element="rangePicker" class="content__top-panel">
@@ -41,21 +102,16 @@ export default class Page {
     <h3 class="block-title">Лидеры продаж</h3>`;
 
     this.subElements = this.getSubElements(this.element);
-
-    const {rangePicker, charts} = this.subElements;
-
-    rangePicker.append(this.rangePicker.element);
+    this.pasteComponents();
 
     return this.element;
-
   }
 
   remove() {
-
+    document.removeEventListener('date-select', this.rangeEvent);
   }
 
   destroy() {
     this.remove();
   }
-
 }
