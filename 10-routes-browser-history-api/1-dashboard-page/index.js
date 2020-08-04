@@ -47,7 +47,7 @@ export default class Page {
 
 
   pasteComponents() {
-    const {rangePicker, charts} = this.subElements;
+    const {rangePicker, charts, mainContainer} = this.subElements;
     const {from, to} = this.defaultDates;
 
     const range = new RangePicker({
@@ -75,8 +75,10 @@ export default class Page {
         from, to
       }
     });
-    const sortableTable = new SortableTable({
-      header
+
+    // настроить сортировку
+    const sortableTable = new SortableTable(header, {
+      url: 'api/dashboard/bestsellers'
     });
 
     orders.element.classList.add('dashboard__chart_orders');
@@ -87,11 +89,30 @@ export default class Page {
     charts.append(orders.element);
     charts.append(sales.element);
     charts.append(customers.element);
-
+    mainContainer.append(sortableTable.element);
   }
 
   render() {
-    this.element = document.createElement('div');
+
+    const element = document.createElement('div');
+
+    element.innerHTML = `<div data-element="mainContainer" class="dashboard full-height flex-column">
+        <div data-element="rangePicker" class="content__top-panel">
+            <h2 class="page-title">Панель управления</h2>
+        </div>
+        <div data-element="charts" class="dashboard__charts"></div>
+        <h3 class="block-title">Лидеры продаж</h3>
+    </div>`;
+
+    this.element = element.firstElementChild;
+
+    this.subElements = this.getSubElements(element);
+
+    this.pasteComponents();
+
+    return this.element;
+
+    /*this.element = document.createElement('div');
     this.element.setAttribute('data-element', 'mainContainer');
     this.element.setAttribute('class', 'dashboard full-height flex-column');
 
@@ -104,7 +125,7 @@ export default class Page {
     this.subElements = this.getSubElements(this.element);
     this.pasteComponents();
 
-    return this.element;
+    return this.element;*/
   }
 
   remove() {
