@@ -84,9 +84,7 @@ export default class Page {
         <div data-element="salesChart" class="dashboard__chart_sales"></div>
         <div data-element="customersChart" class="dashboard__chart_customers"></div>
       </div>
-
       <h3 class="block-title">Best sellers</h3>
-
       <div data-element="sortableTable">
         <!-- sortable-table component -->
       </div>

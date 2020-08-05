@@ -15,9 +15,6 @@ export default class ColumnChart {
     formatHeading = data => `$${data}`,
     link = ''
   } = {}) {
-
-    this.element.setAttribute('style', `--chart-height: ${this.chartHeight}`);
-
     this.url = url;
     this.range = range;
     this.label = label;
@@ -63,6 +60,7 @@ export default class ColumnChart {
         <div data-element="header" class="column-chart__header">${this.setHeaderValue(this.data)}</div>
         <div data-element="body" class="column-chart__chart">${this.setColumns(this.data)}</div>
     </div>`;
+    this.element.setAttribute('style', `--chart-height: ${this.chartHeight}`);
     this.getSubElements(this.element);
   }
 
@@ -74,7 +72,7 @@ export default class ColumnChart {
       const response = await fetch(`https://course-js.javascript.ru/${this.url}?from=${isoFrom}&to=${isoTo}`);
       return Object.values(await response.json());
     } catch (e) {
-      return [];
+      this.onErrorHandler();
     }
   }
 
@@ -89,8 +87,12 @@ export default class ColumnChart {
         this.subElements.body.innerHTML = this.setColumns(this.data);
       }
     } catch (e) {
-      return [];
+      this.onErrorHandler();
     }
+  }
+
+  onErrorHandler() {
+    // метод обработки ошибок
   }
 
   remove() {
