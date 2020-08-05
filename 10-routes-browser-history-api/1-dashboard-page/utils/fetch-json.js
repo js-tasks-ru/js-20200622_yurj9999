@@ -18,10 +18,15 @@ export default async function(url, params) {
     let errorText = response.statusText; // Not Found (for 404)
 
     try {
+      console.error(1111);
       body = await response.json();
 
       errorText = (body.error && body.error.message) || (body.data && body.data.error && body.data.error.message) || errorText;
-    } catch (error) { /* ignore failed body */ }
+    } catch (error) {
+      console.error(2222);
+
+      /* ignore failed body */
+    }
 
     let message = `Error ${response.status}: ${errorText}`;
 
@@ -48,7 +53,7 @@ export class FetchError extends Error {
 // handle uncaught failed fetch through
 window.addEventListener('unhandledrejection', event => {
   if (event.reason instanceof FetchError) {
-    alert(event.reason.message);
+    console.error(event.reason.message);
   }
 });
 
